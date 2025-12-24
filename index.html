@@ -3,69 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crib Obfuscator | Hub</title>
+    <title>Crib Obfuscator | Professional</title>
     <style>
         :root {
-            --bg: #050505;
-            --panel: #0d0d12;
-            --accent: #00a2ff;
-            --glow: rgba(0, 162, 255, 0.4);
-            --text: #ffffff;
-            --border: #1a1a24;
+            --bg: #050505; --panel: #0d0d12; --accent: #00a2ff;
+            --glow: rgba(0, 162, 255, 0.4); --text: #ffffff; --border: #1a1a24;
         }
-
         body {
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: 'Segoe UI', sans-serif;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
+            background-color: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif;
+            margin: 0; display: flex; flex-direction: column; align-items: center; height: 100vh; overflow: hidden;
         }
-
-        /* TAB SYSTEM */
-        .tabs { display: flex; gap: 10px; margin-top: 20px; margin-bottom: 10px; }
+        .tabs { display: flex; gap: 10px; margin-top: 20px; }
         .tab-btn {
             background: #111; border: 1px solid var(--border); color: #777;
-            padding: 10px 25px; border-radius: 8px 8px 0 0; cursor: pointer;
-            font-weight: bold; transition: 0.3s;
+            padding: 10px 25px; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: bold; transition: 0.3s;
         }
         .tab-btn.active {
-            background: var(--panel); color: var(--accent);
-            border-bottom: 2px solid var(--accent); box-shadow: 0 -5px 15px var(--glow);
+            background: var(--panel); color: var(--accent); border-bottom: 2px solid var(--accent); box-shadow: 0 -5px 15px var(--glow);
         }
-
-        /* MAIN UI */
         .main-ui {
-            width: 900px; background: var(--panel); border: 1px solid var(--border);
-            border-radius: 12px; box-shadow: 0 0 40px 5px var(--glow);
-            padding: 25px; display: none; flex-direction: column; gap: 20px;
+            width: 950px; background: var(--panel); border: 1px solid var(--border);
+            border-radius: 12px; box-shadow: 0 0 40px 5px var(--glow); padding: 25px; display: none; flex-direction: column; gap: 15px;
         }
         .main-ui.active { display: flex; }
-        .title-bar {
-            text-align: center; font-size: 24px; font-weight: 900;
-            letter-spacing: 4px; color: var(--accent); text-shadow: 0 0 15px var(--accent);
-        }
+        .title-bar { text-align: center; font-size: 24px; font-weight: 900; letter-spacing: 4px; color: var(--accent); text-shadow: 0 0 15px var(--accent); margin-bottom: 10px; }
 
-        /* OBFUSCATOR & SEARCH STYLES */
-        .container { display: flex; gap: 15px; height: 350px; }
+        /* OBFUSCATOR */
+        .container { display: flex; gap: 15px; height: 380px; }
         .box-wrapper { flex: 1; display: flex; flex-direction: column; gap: 8px; }
-        textarea, .results-container {
+        textarea {
             flex: 1; background: #08080c; border: 1px solid #222; border-radius: 8px;
             color: #ccc; padding: 12px; font-family: monospace; resize: none; outline: none;
         }
-        .results-container { overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .script-card { background: #16161e; padding: 15px; border-radius: 8px; border: 1px solid #222; }
-        .script-card h3 { margin: 0; font-size: 14px; color: var(--accent); }
 
+        /* SEARCH & SCRIPT CARDS */
+        .results-container { overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; height: 400px; padding-right: 5px; }
+        .script-card {
+            background: #12121a; border: 1px solid #1e1e2e; border-radius: 10px; padding: 12px;
+            display: flex; gap: 12px; transition: 0.2s;
+        }
+        .script-card:hover { border-color: var(--accent); background: #161625; }
+        .game-img { width: 80px; height: 80px; border-radius: 8px; object-fit: cover; background: #222; }
+        .script-info { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .script-title { font-size: 15px; font-weight: bold; color: var(--accent); margin: 0; }
+        .script-stats { display: flex; gap: 10px; font-size: 11px; color: #777; margin-top: 4px; }
+        .badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: #222; color: #aaa; text-transform: uppercase; }
+        .working { color: #00ff88; border: 1px solid #00ff8833; }
+        
         .btn {
             background: var(--accent); color: white; border: none; padding: 10px 20px;
             border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s;
         }
         .btn:hover { transform: scale(1.02); box-shadow: 0 0 15px var(--accent); }
+        .api-credit { text-align: center; font-size: 10px; color: #444; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -78,49 +68,27 @@
     <div id="obfuscator" class="main-ui active">
         <div class="title-bar">CRIB OBFUSCATOR</div>
         <div class="container">
-            <div class="box-wrapper">
-                <textarea id="input" placeholder="-- Paste Lua Script Here"></textarea>
-            </div>
-            <div class="box-wrapper">
-                <textarea id="output" readonly placeholder="-- Obfuscated Result"></textarea>
-            </div>
+            <div class="box-wrapper"><textarea id="input" placeholder="-- Paste Lua Code Here"></textarea></div>
+            <div class="box-wrapper"><textarea id="output" readonly placeholder="-- Result will appear here"></textarea></div>
         </div>
         <div style="display:flex; justify-content:center; gap:10px;">
             <button class="btn" id="obfBtn" onclick="obfuscate()">Obfuscate</button>
-            <button class="btn" style="background:#333" onclick="copyText(document.getElementById('output').value)">Copy</button>
+            <button class="btn" style="background:#333" onclick="copyText(document.getElementById('output').value)">Copy Output</button>
         </div>
     </div>
 
     <div id="search" class="main-ui">
         <div class="title-bar">CRIB SEARCH</div>
-        <div style="display:flex; gap:10px;">
-            <input type="text" id="searchInput" style="flex:1; background:#08080c; border:1px solid #222; border-radius:8px; padding:10px; color:white;" placeholder="Search scripts...">
+        <div style="display:flex; gap:10px; margin-bottom: 5px;">
+            <input type="text" id="searchInput" style="flex:1; background:#08080c; border:1px solid #222; border-radius:8px; padding:12px; color:white;" placeholder="Search scripts (Arsenal, Blox Fruits...)">
             <button class="btn" onclick="searchScripts()">Search</button>
         </div>
         <div id="results" class="results-container"></div>
+        <div class="api-credit">POWERED BY SCRIPTBLOX API</div>
     </div>
 
     <script>
-        // Multi-proxy fallback system to prevent "Failed to Fetch"
-        const proxies = [
-            "https://api.allorigins.win/raw?url=",
-            "https://corsproxy.io/?",
-            "https://thingproxy.freeboard.io/fetch/"
-        ];
-
-        async function fetchWithFallback(url, options = {}, proxyIndex = 0) {
-            try {
-                const proxyUrl = proxies[proxyIndex] + encodeURIComponent(url);
-                const response = await fetch(proxyUrl, options);
-                if (!response.ok) throw new Error();
-                return await response.json();
-            } catch (err) {
-                if (proxyIndex < proxies.length - 1) {
-                    return fetchWithFallback(url, options, proxyIndex + 1);
-                }
-                throw err;
-            }
-        }
+        const proxy = "https://api.allorigins.win/raw?url=";
 
         function openTab(tabName) {
             document.querySelectorAll('.main-ui').forEach(el => el.classList.remove('active'));
@@ -129,21 +97,33 @@
             event.currentTarget.classList.add('active');
         }
 
+        function copyText(text) {
+            if (!text) return;
+            const el = document.createElement('textarea');
+            el.value = text;
+            document.body.appendChild(el); el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            alert("Copied to clipboard!");
+        }
+
         async function obfuscate() {
             const input = document.getElementById('input').value;
             const output = document.getElementById('output');
             if (!input) return;
-            document.getElementById('obfBtn').innerText = "Processing...";
-
+            document.getElementById('obfBtn').innerText = "Obfuscating...";
+            
             try {
-                const data = await fetchWithFallback("https://luaobfuscator.com/api/obfuscator/newscript", {
+                // Fixed API call for LuaObfuscator
+                const res = await fetch(proxy + encodeURIComponent("https://luaobfuscator.com/api/obfuscator/newscript"), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ script: input, options: { "Minify": true } })
+                    body: JSON.stringify({ script: input, options: { "Minify": true, "Custom": true } })
                 });
-                output.value = data.code || "Error: API Response empty.";
+                const data = await res.json();
+                output.value = data.code || "-- API Error: Check code validity.";
             } catch (e) {
-                output.value = "-- Connection Error --\nTry disabling your AdBlocker or VPN.";
+                output.value = "-- Connection Error --\nCheck if API is up.";
             }
             document.getElementById('obfBtn').innerText = "Obfuscate";
         }
@@ -152,28 +132,42 @@
             const query = document.getElementById('searchInput').value;
             const resDiv = document.getElementById('results');
             if (!query) return;
-            resDiv.innerHTML = "Searching...";
+            resDiv.innerHTML = "<p style='grid-column: 1/3; text-align:center;'>Fetching scripts...</p>";
 
             try {
-                // Using a direct ScriptBlox Search endpoint
-                const data = await fetchWithFallback(`https://scriptblox.com/api/script/search?q=${query}&mode=free&max=10`);
+                const res = await fetch(proxy + encodeURIComponent(`https://scriptblox.com/api/script/search?q=${query}&mode=free&max=20`));
+                const data = await res.json();
                 resDiv.innerHTML = "";
+                
                 data.result.scripts.forEach(s => {
+                    const gameImage = s.game.imageUrl ? `https://scriptblox.com${s.game.imageUrl}` : 'https://via.placeholder.com/80';
+                    const workingBadge = s.isPatched ? '<span class="badge">Patched</span>' : '<span class="badge working">Working</span>';
+                    
                     const card = document.createElement('div');
                     card.className = 'script-card';
-                    card.innerHTML = `<h3>${s.title}</h3><p style="font-size:10px; color:#555;">${s.game.name}</p>
-                    <button class="btn" style="font-size:10px; margin-top:5px;" onclick="copyText(\`${s.script.replace(/`/g, '\\`')}\`)">Copy</button>`;
+                    card.innerHTML = `
+                        <img src="${gameImage}" class="game-img" onerror="this.src='https://via.placeholder.com/80'">
+                        <div class="script-info">
+                            <div>
+                                <h3 class="script-title">${s.title}</h3>
+                                <div class="script-stats">
+                                    <span>👁️ ${s.views.toLocaleString()}</span>
+                                    <span>👍 ${s.likeCount || 0}</span>
+                                    <span>👎 ${s.dislikeCount || 0}</span>
+                                </div>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                ${workingBadge}
+                                <button class="btn" style="font-size:10px; padding:5px 10px;" id="copy-${s._id}">Copy Script</button>
+                            </div>
+                        </div>
+                    `;
                     resDiv.appendChild(card);
+                    document.getElementById(`copy-${s._id}`).onclick = () => copyText(s.script);
                 });
             } catch (e) {
-                resDiv.innerHTML = "Search failed. The API might be down.";
+                resDiv.innerHTML = "<p style='grid-column: 1/3; text-align:center; color:red;'>Search Failed. API or Proxy may be down.</p>";
             }
-        }
-
-        function copyText(text) {
-            if (!text) return;
-            navigator.clipboard.writeText(text);
-            alert("Copied to clipboard!");
         }
     </script>
 </body>
