@@ -1,47 +1,180 @@
-async function searchScripts() {
-    const query = document.getElementById('searchInput').value;
-    const results = document.getElementById('results');
-    if (!query) return;
-
-    results.innerHTML = "<div class='loading-text'>Searching ScriptBlox...</div>";
-    
-    try {
-        // Updated proxy and endpoint
-        const targetUrl = `https://scriptblox-api-proxy.vercel.app/api/search?q=${encodeURIComponent(query)}&mode=free`;
-        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
-
-        const res = await fetch(proxyUrl);
-        
-        if (!res.ok) throw new Error(`HTTP Error! Status: ${res.status}`);
-
-        const data = await res.json();
-        results.innerHTML = "";
-
-        if (!data.result || !data.result.scripts || data.result.scripts.length === 0) {
-            results.innerHTML = "<p style='color:#777;'>No scripts found for that search.</p>";
-            return;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crib Obfuscator | Hub</title>
+    <style>
+        :root {
+            --bg: #050505;
+            --panel: #0d0d12;
+            --accent: #00a2ff;
+            --glow: rgba(0, 162, 255, 0.4);
+            --text: #ffffff;
+            --border: #1a1a24;
         }
 
-        data.result.scripts.forEach(s => {
-            const card = document.createElement('div');
-            card.className = 'script-card';
-            
-            // Clean up script string to prevent breaking the button
-            const safeScript = s.script.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-            
-            card.innerHTML = `
-                <h3>${s.title}</h3>
-                <p style="font-size:11px; color:#777;">Game: ${s.game.name}</p>
-                <button class="btn" style="font-size:10px; padding:5px 10px;" onclick="copyText('${safeScript}')">Copy Script</button>
-            `;
-            results.appendChild(card);
-        });
-    } catch (e) {
-        console.error("Search Error:", e);
-        results.innerHTML = `
-            <div style="color:#ff4444; font-size:12px; padding:20px;">
-                <p>Error: API Connection Failed.</p>
-                <p style="color:#777; font-size:10px;">Check console (F12) for details.</p>
-            </div>`;
-    }
-}
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* TAB SYSTEM */
+        .tabs { display: flex; gap: 10px; margin-top: 20px; margin-bottom: 10px; }
+        .tab-btn {
+            background: #111; border: 1px solid var(--border); color: #777;
+            padding: 10px 25px; border-radius: 8px 8px 0 0; cursor: pointer;
+            font-weight: bold; transition: 0.3s;
+        }
+        .tab-btn.active {
+            background: var(--panel); color: var(--accent);
+            border-bottom: 2px solid var(--accent); box-shadow: 0 -5px 15px var(--glow);
+        }
+
+        /* MAIN UI */
+        .main-ui {
+            width: 900px; background: var(--panel); border: 1px solid var(--border);
+            border-radius: 12px; box-shadow: 0 0 40px 5px var(--glow);
+            padding: 25px; display: none; flex-direction: column; gap: 20px;
+        }
+        .main-ui.active { display: flex; }
+        .title-bar {
+            text-align: center; font-size: 24px; font-weight: 900;
+            letter-spacing: 4px; color: var(--accent); text-shadow: 0 0 15px var(--accent);
+        }
+
+        /* OBFUSCATOR & SEARCH STYLES */
+        .container { display: flex; gap: 15px; height: 350px; }
+        .box-wrapper { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+        textarea, .results-container {
+            flex: 1; background: #08080c; border: 1px solid #222; border-radius: 8px;
+            color: #ccc; padding: 12px; font-family: monospace; resize: none; outline: none;
+        }
+        .results-container { overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .script-card { background: #16161e; padding: 15px; border-radius: 8px; border: 1px solid #222; }
+        .script-card h3 { margin: 0; font-size: 14px; color: var(--accent); }
+
+        .btn {
+            background: var(--accent); color: white; border: none; padding: 10px 20px;
+            border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s;
+        }
+        .btn:hover { transform: scale(1.02); box-shadow: 0 0 15px var(--accent); }
+    </style>
+</head>
+<body>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="openTab('obfuscator')">Obfuscator</button>
+        <button class="tab-btn" onclick="openTab('search')">Search Scripts</button>
+    </div>
+
+    <div id="obfuscator" class="main-ui active">
+        <div class="title-bar">CRIB OBFUSCATOR</div>
+        <div class="container">
+            <div class="box-wrapper">
+                <textarea id="input" placeholder="-- Paste Lua Script Here"></textarea>
+            </div>
+            <div class="box-wrapper">
+                <textarea id="output" readonly placeholder="-- Obfuscated Result"></textarea>
+            </div>
+        </div>
+        <div style="display:flex; justify-content:center; gap:10px;">
+            <button class="btn" id="obfBtn" onclick="obfuscate()">Obfuscate</button>
+            <button class="btn" style="background:#333" onclick="copyText(document.getElementById('output').value)">Copy</button>
+        </div>
+    </div>
+
+    <div id="search" class="main-ui">
+        <div class="title-bar">CRIB SEARCH</div>
+        <div style="display:flex; gap:10px;">
+            <input type="text" id="searchInput" style="flex:1; background:#08080c; border:1px solid #222; border-radius:8px; padding:10px; color:white;" placeholder="Search scripts...">
+            <button class="btn" onclick="searchScripts()">Search</button>
+        </div>
+        <div id="results" class="results-container"></div>
+    </div>
+
+    <script>
+        // Multi-proxy fallback system to prevent "Failed to Fetch"
+        const proxies = [
+            "https://api.allorigins.win/raw?url=",
+            "https://corsproxy.io/?",
+            "https://thingproxy.freeboard.io/fetch/"
+        ];
+
+        async function fetchWithFallback(url, options = {}, proxyIndex = 0) {
+            try {
+                const proxyUrl = proxies[proxyIndex] + encodeURIComponent(url);
+                const response = await fetch(proxyUrl, options);
+                if (!response.ok) throw new Error();
+                return await response.json();
+            } catch (err) {
+                if (proxyIndex < proxies.length - 1) {
+                    return fetchWithFallback(url, options, proxyIndex + 1);
+                }
+                throw err;
+            }
+        }
+
+        function openTab(tabName) {
+            document.querySelectorAll('.main-ui').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        async function obfuscate() {
+            const input = document.getElementById('input').value;
+            const output = document.getElementById('output');
+            if (!input) return;
+            document.getElementById('obfBtn').innerText = "Processing...";
+
+            try {
+                const data = await fetchWithFallback("https://luaobfuscator.com/api/obfuscator/newscript", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ script: input, options: { "Minify": true } })
+                });
+                output.value = data.code || "Error: API Response empty.";
+            } catch (e) {
+                output.value = "-- Connection Error --\nTry disabling your AdBlocker or VPN.";
+            }
+            document.getElementById('obfBtn').innerText = "Obfuscate";
+        }
+
+        async function searchScripts() {
+            const query = document.getElementById('searchInput').value;
+            const resDiv = document.getElementById('results');
+            if (!query) return;
+            resDiv.innerHTML = "Searching...";
+
+            try {
+                // Using a direct ScriptBlox Search endpoint
+                const data = await fetchWithFallback(`https://scriptblox.com/api/script/search?q=${query}&mode=free&max=10`);
+                resDiv.innerHTML = "";
+                data.result.scripts.forEach(s => {
+                    const card = document.createElement('div');
+                    card.className = 'script-card';
+                    card.innerHTML = `<h3>${s.title}</h3><p style="font-size:10px; color:#555;">${s.game.name}</p>
+                    <button class="btn" style="font-size:10px; margin-top:5px;" onclick="copyText(\`${s.script.replace(/`/g, '\\`')}\`)">Copy</button>`;
+                    resDiv.appendChild(card);
+                });
+            } catch (e) {
+                resDiv.innerHTML = "Search failed. The API might be down.";
+            }
+        }
+
+        function copyText(text) {
+            if (!text) return;
+            navigator.clipboard.writeText(text);
+            alert("Copied to clipboard!");
+        }
+    </script>
+</body>
+</html>
